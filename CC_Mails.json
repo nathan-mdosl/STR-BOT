@@ -1,0 +1,9 @@
+{
+    "ccmails": [
+        "nathan@mydigitaloffice.ca"
+    ],
+    "erroremail": {
+        "email": "aoc",
+        "password": "password"
+    }
+}
