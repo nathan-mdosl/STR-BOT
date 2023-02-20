@@ -220,12 +220,10 @@ class STRBOT:
       
                 self.ftp.close()
 
-                subject = 'GSS Report Bot Has finished Running'
-                message =(f"""Bot For GSS HighGate Select has successfully ran
-        Google Sheet will be ready by Today at 4 PM SL Time
-
-        Next run time will be next Wednesday
-        [THIS IS AN AUTOMATED MESSAGE - PLEASE DO NOT REPLY DIRECTLY TO THIS EMAIL]
+                subject = 'STR Bot Has finished Running'
+                message =(f"""Bot For STR  has successfully ran
+                File name {self.latestfile} has been downloaded,edited and uploaded to server {self.ftpHost} 
+                [THIS IS AN AUTOMATED MESSAGE - PLEASE DO NOT REPLY DIRECTLY TO THIS EMAIL]
                     """)    
              
                 try: # send email from given account to the  mail from csv, saying that GB check failed
