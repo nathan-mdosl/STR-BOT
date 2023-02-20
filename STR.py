@@ -1,9 +1,6 @@
 # import required packages
 import os, time
-import sys
 from ftplib import FTP
-import ftplib
-
 from dateutil import parser
 from pathlib import Path
 import pandas as pd
@@ -15,26 +12,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
-from email.mime.image import MIMEImage
 import smtplib
-
-import logging
 import paramiko
 import pysftp
 import xlsxwriter
-import datetime
 
-
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-
-from email.mime.base import MIMEBase
-from email import encoders
-from email.mime.image import MIMEImage
 
 paramiko.util.log_to_file('debug.txt', level = 'DEBUG')
 
@@ -60,18 +42,34 @@ class STRBOT:
             self.errorReportemailpasswd = errormaildets['password']
 
         #sftp credits
-        self.host = '69.44.220.253'
-        self.port = 22
-        self.user = 'mdo'
-        self.password = 'kZF0NxLP'
-        self.filePath = "list.csv"  # change
-        
+        with open(root / 'credentials.json', "r") as rf:
+             decoded_data = json.load(rf)
+             for p in decoded_data['SFTP']:
+                 sftpHost=p['sftpHost']
+                 sftpPort=p['sftpPort']
+                 sftpUser=p['sftpUser']
+                 sftpPassword=p['sftpPassword']
+                
+        self.host = sftpHost
+        self.port = sftpPort
+        self.user = sftpUser
+        self.password = sftpPassword
+        self.filePath = "list.csv"  # taken from root of working dir
         self.cnopts = pysftp.CnOpts()
         self.cnopts.hostkeys = None
 
-        self.ftpHost = "52.72.14.3"
-        self.ftpUser = "MYPUpload"
-        self.ftpPassword= "gB8m8DAQqz"
+        #ftp credits
+        with open(root / 'credentials.json', "r") as rf:
+             decoded_data = json.load(rf)
+             for p in decoded_data['FTP']:
+                 ftpHost=p['ftpHost']
+                 ftpUser=p['ftpUser']
+                 ftpPassword=p['ftpPassword']
+
+        
+        self.ftpHost = ftpHost
+        self.ftpUser = ftpUser
+        self.ftpPassword= ftpPassword
     
         self.df = pd.read_csv(self.filePath)  # use pandas to read the csv file
         # extract all from the csv file
@@ -84,8 +82,6 @@ class STRBOT:
         print("#######################")
         print("Bot has completed running")
 
-
-    
     def ReadFromCSV(self, FileName, HotelName,FTPPath):
         print("#######################")
         print("Starting process. Reading CSV")
@@ -221,9 +217,12 @@ class STRBOT:
                 self.ftp.close()
 
                 subject = 'STR Bot Has finished Running'
-                message =(f"""Bot For STR  has successfully ran
-                File name {self.latestfile} has been downloaded,edited and uploaded to server {self.ftpHost} 
-                [THIS IS AN AUTOMATED MESSAGE - PLEASE DO NOT REPLY DIRECTLY TO THIS EMAIL]
+                message =(f"""STR BOT has successfully ran
+File name {self.latestfile} has been downloaded,edited and uploaded to server {self.ftpHost} 
+                
+
+
+[THIS IS AN AUTOMATED MESSAGE - PLEASE DO NOT REPLY DIRECTLY TO THIS EMAIL]
                     """)    
              
                 try: # send email from given account to the  mail from csv, saying that GB check failed
@@ -233,7 +232,7 @@ class STRBOT:
                             time.sleep(2)
                 except Exception as e:
                             print('Error while Sending failure email \nError Details:')
-                            logging.warning('Error while Sending QC email \nError Details:') 
+                           
                         
             except Exception as e:
                 print("Error: ", e)
@@ -244,7 +243,6 @@ class STRBOT:
     def sendEmail(self, email, password, send_to, subject, message):
 
         print("Sending email to", send_to)
-        logging.info("Sending email to")
         msg = MIMEMultipart()
         msg["From"] = email
         msg["To"] = send_to
@@ -257,8 +255,6 @@ class STRBOT:
         server.sendmail(email, send_to, text)
         server.quit()
   
-
-
 
 def main():
     STRBOT()
