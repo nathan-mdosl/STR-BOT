@@ -219,6 +219,24 @@ class STRBOT:
                 print("File Successfully upload to DIR:", self.ftp.pwd())
       
                 self.ftp.close()
+
+                subject = 'GSS Report Bot Has finished Running'
+                message =(f"""Bot For GSS HighGate Select has successfully ran
+        Google Sheet will be ready by Today at 4 PM SL Time
+
+        Next run time will be next Wednesday
+        [THIS IS AN AUTOMATED MESSAGE - PLEASE DO NOT REPLY DIRECTLY TO THIS EMAIL]
+                    """)    
+             
+                try: # send email from given account to the  mail from csv, saying that GB check failed
+                            self.sendEmail(self.errorReportemail, self.errorReportemailpasswd, self.errorReportemail, subject, message)
+                            for mail in self.ccmail:
+                                self.sendEmail(self.errorReportemail, self.errorReportemailpasswd, mail, subject, message)
+                            time.sleep(2)
+                except Exception as e:
+                            print('Error while Sending failure email \nError Details:')
+                            logging.warning('Error while Sending QC email \nError Details:') 
+                        
             except Exception as e:
                 print("Error: ", e)
 
