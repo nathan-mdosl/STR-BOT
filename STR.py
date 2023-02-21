@@ -7,16 +7,19 @@ import pandas as pd
 from datetime import date
 import shutil
 import simplejson as json
-from apscheduler.schedulers.blocking import BlockingScheduler
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+from email.mime.image import MIMEImage
+
 import smtplib
 import paramiko
 import pysftp
 import xlsxwriter
-
+import openpyxl
 
 paramiko.util.log_to_file('debug.txt', level = 'DEBUG')
 
@@ -186,13 +189,13 @@ class STRBOT:
 
             writer.close()
             print("Excel file has been updated. Preparing to upload.")
-            self.UploadSftp()
+            self.UploadFtp()
             time.sleep(3)
         except Exception as e:
 
             print("Error: ", e)
                 
-    def UploadSftp(self):
+    def UploadFtp(self):
         print("#######################")
         print("Starting upload process to FTP server:" ,self.ftpHost)
         time.sleep(2)
@@ -214,8 +217,6 @@ class STRBOT:
                 self.ftp.nlst()
                 print("File Successfully upload to DIR:", self.ftp.pwd())
       
-                self.ftp.close()
-
                 subject = 'STR Bot Has finished Running'
                 message =(f"""STR BOT has successfully ran
 File name {self.latestfile} has been downloaded,edited and uploaded to server {self.ftpHost} 
@@ -231,9 +232,9 @@ File name {self.latestfile} has been downloaded,edited and uploaded to server {s
                                 self.sendEmail(self.errorReportemail, self.errorReportemailpasswd, mail, subject, message)
                             time.sleep(2)
                 except Exception as e:
-                            print('Error while Sending failure email \nError Details:')
+                            print('Error while Sending failure email \nError Details:', e)
                            
-                        
+                self.ftp.close()        
             except Exception as e:
                 print("Error: ", e)
 
