@@ -177,11 +177,40 @@ class STRBOT:
                 break
                     
             else:
-                print(self.latestfile, "Is not available in DIR. Preparing to Edit file. Before uploading to:", self.ftpHost)
+                print(self.latestfile, "Is not available in Archive folder. Checking STR Folder")
                 self.ftp.close()
                 time.sleep(3)
-                self.EditFile()
-             
+                # self.EditFile()
+                try:
+
+                    self.ftp = FTP(self.ftpHost, self.ftpUser, self.ftpPassword, timeout=200)
+                    print("Successfully connected to FTP server:", self.ftpHost)
+                    print("Changing DIR to:", self.FTPPath)
+                    self.ftp.cwd(self.FTPPath)
+                    self.ftp.dir()
+                    names = self.ftp.nlst()
+                    final_names= [line for line in names if self.latestfile in line]
+                    latest_time = None
+                    latest_name = None
+                    time.sleep(3)
+                    for name in final_names:
+                        ftptime = self.ftp.sendcmd("MDTM " + name)
+                        if (latest_time is None) or (ftptime > latest_time):
+                            latest_name = name
+                            latest_time = ftptime
+                            print('Latest file {} is in STRFolder. File already exists! File is being prepared to move to archive folder.'.format(self.latestfile))
+                            self.ftp.close()
+                        break
+                            
+                    else:
+                        print(self.latestfile, "Is not available in DIR. Preparing to Edit file. Before uploading to:", self.ftpHost)
+                        self.ftp.close()
+                        time.sleep(3)
+                        self.EditFile()
+        
+                
+                except Exception as e:
+                    print(e)
 
 
         except Exception as e:
