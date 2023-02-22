@@ -2,6 +2,7 @@
 /local
 /debug.txt
 /credentials.json
+/CC_Mails.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
