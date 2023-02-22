@@ -79,13 +79,29 @@ class STRBOT:
         FileNames = self.df.FileName.to_numpy()
         HotelNames = self.df.HotelName.to_numpy()
         FTPPaths = self.df.FTPPath.to_numpy()
+        ArchivePaths = self.df.ArchivePath.to_numpy()
         # iterate over extracted  to process them
-        for self.FileName, self.HotelName, self.FTPPath in zip(FileNames, HotelNames,FTPPaths):
-            self.ReadFromCSV(str(self.FileName).strip(), str(self.HotelName).strip(),str(self.FTPPath).strip())
+        for self.FileName, self.HotelName, self.FTPPath,self.ArchivePath in zip(FileNames, HotelNames,FTPPaths,ArchivePaths):
+            self.ReadFromCSV(str(self.FileName).strip(), str(self.HotelName).strip(),str(self.FTPPath).strip(),str(self.ArchivePath).strip())
         print("#######################")
         print("Bot has completed running")
+    
+    def sendEmail(self, email, password, send_to, subject, message):
 
-    def ReadFromCSV(self, FileName, HotelName,FTPPath):
+        print("Sending email to", send_to)
+        msg = MIMEMultipart()
+        msg["From"] = email
+        msg["To"] = send_to
+        msg["Subject"] = subject
+        msg.attach(MIMEText(message, 'plain'))
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(email, password)
+        text = msg.as_string()
+        server.sendmail(email, send_to, text)
+        server.quit()
+
+    def ReadFromCSV(self, FileName, HotelName,FTPPath,ArchivePath):
         print("#######################")
         print("Starting process. Reading CSV")
         print("Loaded file name is: " ,self.FileName, self.HotelName)
@@ -120,11 +136,17 @@ class STRBOT:
                     Path(self.localDIR).mkdir(parents=True, exist_ok=True)
                     os.chdir(self.localDIR)
                     os.getcwd()
-                    print("Downloading file to:", self.localDIR)
-                    sftp.get(self.latestfile, localpath=os.path.join(self.localDIR, self.latestfile))
-                    print("Download done")
-                    self.CheckFileFTP()
-                    time.sleep(3)
+                    try:
+
+                        print("Downloading file to:", self.localDIR)
+                        sftp.get(self.latestfile, localpath=os.path.join(self.localDIR, self.latestfile))
+                        print("Download done")
+                        time.sleep(3)
+                        self.CheckFileFTP()
+   
+                    except Exception as e:
+                        print("Error: ", e)
+                        self.Sftp_conn()
 
         except Exception as e:
             print("Error: ", e)
@@ -136,14 +158,14 @@ class STRBOT:
 
             self.ftp = FTP(self.ftpHost, self.ftpUser, self.ftpPassword, timeout=200)
             print("Successfully connected to FTP server:", self.ftpHost)
-            print("Changing DIR")
-            self.ftp.cwd(self.FTPPath)
+            print("Changing DIR to:", self.ArchivePath)
+            self.ftp.cwd(self.ArchivePath)
             self.ftp.dir()
             names = self.ftp.nlst()
             final_names= [line for line in names if self.latestfile in line]
             latest_time = None
             latest_name = None
-
+            time.sleep(3)
             for name in final_names:
                 ftptime = self.ftp.sendcmd("MDTM " + name)
                 if (latest_time is None) or (ftptime > latest_time):
@@ -157,8 +179,9 @@ class STRBOT:
             else:
                 print(self.latestfile, "Is not available in DIR. Preparing to Edit file. Before uploading to:", self.ftpHost)
                 self.ftp.close()
-                self.EditFile()
                 time.sleep(3)
+                self.EditFile()
+             
 
 
         except Exception as e:
@@ -189,8 +212,9 @@ class STRBOT:
 
             writer.close()
             print("Excel file has been updated. Preparing to upload.")
-            self.UploadFtp()
             time.sleep(3)
+            self.UploadFtp()
+            
         except Exception as e:
 
             print("Error: ", e)
@@ -241,21 +265,6 @@ File name {self.latestfile} has been downloaded,edited and uploaded to server {s
         except Exception as e:
             print("Error: ", e)
             
-    def sendEmail(self, email, password, send_to, subject, message):
-
-        print("Sending email to", send_to)
-        msg = MIMEMultipart()
-        msg["From"] = email
-        msg["To"] = send_to
-        msg["Subject"] = subject
-        msg.attach(MIMEText(message, 'plain'))
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(email, password)
-        text = msg.as_string()
-        server.sendmail(email, send_to, text)
-        server.quit()
-  
 
 def main():
     STRBOT()
