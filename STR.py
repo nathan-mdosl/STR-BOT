@@ -1,5 +1,5 @@
 # import required packages
-import os, time
+import os, time,re
 from ftplib import FTP
 from dateutil import parser
 from pathlib import Path
@@ -162,18 +162,45 @@ class STRBOT:
             self.ftp.cwd(self.ArchivePath)
             self.ftp.dir()
             names = self.ftp.nlst()
-            final_names= [line for line in names if self.latestfile in line]
-            latest_time = None
-            latest_name = None
-            time.sleep(3)
-            for name in final_names:
-                ftptime = self.ftp.sendcmd("MDTM " + name)
-                if (latest_time is None) or (ftptime > latest_time):
-                    latest_name = name
-                    latest_time = ftptime
-                    print('Latest file {} is here. No need to upload'.format(self.latestfile))
-                    self.ftp.close()
-                
+
+            # final_names= [line for line in names if self.latestfile in line]
+            # latest_time = None
+            # latest_name = None
+            # time.sleep(3)
+            # for name in final_names:
+            #     ftptime = self.ftp.sendcmd("MDTM " + name)
+            #     if (latest_time is None) or (ftptime > latest_time):
+            #         latest_name = name
+            #         latest_time = ftptime
+            #         print('Latest file {} is here. No need to upload'.format(self.latestfile))
+            #         self.ftp.close()
+            print("Formatting file name......")
+            time.sleep(2)
+            p = re.compile('(\s*).xlsx(\s*)')
+            matchfile = p.sub('', self.latestfile)
+            str(matchfile)
+            print("Searching for file:", matchfile)  
+
+            def search_for_file(search_string):
+                file_list = []
+                # Get list of files on server
+                self.ftp.retrlines('LIST', file_list.append)
+                # Loop through files and add matches to result list
+                result = []
+                for file in file_list:
+                    if search_string in file:
+                        result.append(file.split()[-1])
+                        print("File founded!")
+                return result
+
+            # Call search function with specified search string
+            matching_files = search_for_file(matchfile)
+
+            # Print list of matching filenames
+            for file in matching_files:
+                print('Latest file {} is already uploaded. No need to upload {}, as it already exists!'.format(file,self.latestfile))
+                time.sleep(3)
+
                 break
                     
             else:
